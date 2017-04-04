@@ -2,7 +2,7 @@
 # password = input("Password: ")
 
 username = "kenqiwu@gmail.com"
-password = "password"
+password = "uhjoi"
 
 # can save sign in credentials to login.properties
 
