@@ -1,6 +1,10 @@
 # YouTubeSearchBySubscriptions
 Searches only for videos exclusive to your YouTube subscriptions
 
+from apiclient.discovery import build
+from apiclient.errors import HttpError
+from oauth2client.tools import argparser
+from oauth2client import client
+from oauth2client.client import OAuth2WebServerFlow
 
-Sign up for YouTube Data API here: https://console.developers.google.com/apis/api
-pip install --upgrade google-api-python-client
+pip install google-api-python-client
