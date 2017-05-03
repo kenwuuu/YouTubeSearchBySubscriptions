@@ -3,19 +3,41 @@
 
   <head>
     <title>Search Subscriptions</title>
+    <script src="auth.js"></script>
     <script src="popup.js"></script>
+    <link rel="stylesheet" type="text/css" href="common.min.css">
+    <link rel="stylesheet" type="text/css" href="browser_action.min.css">
+	<style>
+		p {
+			font-size: 150%;
+		}
+	</style>
+<!--	<style>
+		div {
+			border: 1px solid black;
+			overflow-y: scroll;
+		}
+	</style> 
+-->
   </head>
 
   <body>
-    <h3>Search Subscriptions</h3>
+    <basefont face="roboto">
+	
+    <input type=text id = "query-field"></text>
 
-    <input 	  type=text 
-		  id = "searchBox"></text>
-
-    <script search="search.js"></script>
-
-    <button id="button">Search</button>
-
+    <button id="button" type="button" class="btn btn-primary" onclick="myFunction()">Search Subscriptions</button>
+	
+	
+	<div id = "display" style="font-size:100%;">
+		<p id="demo"></p>
+	</div>
+	
+    <div class="footer">
+      <!--&copy;--> 
+	  <span id="year">&copy; 2017</span> Kenneth Wu
+    </div>
+	
   </body>
 
 </html>

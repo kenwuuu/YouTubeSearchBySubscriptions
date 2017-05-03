@@ -7,6 +7,24 @@
     		"default_icon": "icon.png",
     		"default_popup": "popup.html",
 		"default_title": "Youtube Search"
-	}
+	},
 
+	"oauth2": {
+		"client_id": "166276515258-e4t4s5uu21v1qs3p0db2gggmqareih26.apps.googleusercontent.com",
+		"scopes": [
+		  "https://www.googleapis.com/auth/youtube.readonly"
+		]
+	},
+	
+	"background": {
+		"scripts": ["background.js"]
+	},
+	
+	"permissions": [
+		"storage", 
+		"tabs", 
+		"identity",
+		"identity.email",
+		"https://www.googleapis.com/*"
+	]
 }
