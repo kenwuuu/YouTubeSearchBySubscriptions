@@ -4,7 +4,7 @@
 // If you run this code from a server other than http://localhost,
 // you need to register your own client ID.
 // secret = YxfL6hAB8kCbqMvE1AeKkanM
-var OAUTH2_CLIENT_ID = '166276515258-qo8ifr3buil00fjcf3fqp6vov09cde9r.apps.googleusercontent.com';
+var OAUTH2_CLIENT_ID = 'add your client id';
 var OAUTH2_SCOPES = [
   'https://www.googleapis.com/auth/youtube'
 ];
