@@ -43,6 +43,7 @@ function getQuery() {
 	
 	document.getElementById('display').innerHTML = '';
 	
+	// searches all channelIDs for query
 	for (var i = 0; i < channelIDs.length; i++) {
 		var channel = channelIDs[i];
 		searchAllSubs(query, channel);
@@ -94,21 +95,20 @@ function searchAllSubs(query, channel) {
 					continue;
 				videoPlayerIframe.src = "https://www.youtube.com/embed/" + videoId; 
 				
+				calculateLikeRatio(videoId);
+				//alert(calculateLikeRatio(videoId));
+				
 				videoContainer.appendChild(videoPlayerIframe);
-				videoContainer.appendChild(linebreak);
-				videoContainer.appendChild(calculateLikeRatio(videoId));
 				videoContainer.appendChild(linebreak);
 				channelContainer.appendChild(videoContainer);
 				// breaks up the videos so they don't mesh
 				channelContainer.appendChild(linebreak);
 				document.getElementById('display').appendChild(channelContainer);
-				
 			}
 		}
 	}
 }
 
-// returns undefined but has proper values when checked with alert
 function calculateLikeRatio(videoId) {
 	// send REST request for video stats
 	var xhr = new XMLHttpRequest();
@@ -123,12 +123,13 @@ function calculateLikeRatio(videoId) {
 			statsInfo = xhr.responseText;
 			statsParsed = JSON.parse(statsInfo);
 			
-			// basic theoretical physics
+			// basic math
 			var likeCount = parseInt(statsParsed.items[0].statistics.likeCount);
 			var dislikeCount = parseInt(statsParsed.items[0].statistics.dislikeCount);
 			var totalCount = likeCount + dislikeCount;
-			var ratio = likeCount / totalCount;
-			//alert(ratio);
+			var ratio = 100 * (likeCount / totalCount);
+			ratio = parseInt(ratio);
+			alert(ratio);
 			return ratio;
 		}
 	}
@@ -143,7 +144,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		if(response instanceof String || typeof response === "string"){
 			query.value = response;
 		}
-
 	});
     document.getElementById('button').addEventListener('click', getQuery);
 });
