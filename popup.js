@@ -1,139 +1,149 @@
-var channelIDs = [];
-var toke = '';
+// channel and subscription are essentially synonymous. 
 
-chrome.identity.getAuthToken(function(token) {
+var channelIDs = [];
+var globalToken = '';
+
+chrome.identity.getAuthToken({'interactive': true}, function(token) {
 	if (chrome.runtime.lastError) {
-		alert('ass');
+		alert(chrome.runtime.lastError.string);
         callback(chrome.runtime.lastError);
         return;
     } else {
-		// Use the token.
+		// store token
 		console.log(token); 
-		toke = token;
+		globalToken = token;
 		
+		// send REST request for user's subscriptions
 		var xhr = new XMLHttpRequest();
 		xhr.open('GET',
 		  'https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&mine=true');
-		xhr.setRequestHeader('Authorization',
-		  'Bearer ' + token);
+		xhr.setRequestHeader('Authorization', 'Bearer ' + globalToken);
 		xhr.send();
 		
+		// when response received, parse into JSON and do work
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState == XMLHttpRequest.DONE) {
-				var subInfo = xhr.responseText;
-				var subParsed = JSON.parse(subInfo);
-				var channelCount = subParsed.pageInfo.totalResults;
+				var subsInfo = xhr.responseText;
+				var subsParsed = JSON.parse(subsInfo);
 				
-				//alert(channelCount);
-				var count = 0;
-				while (count < channelCount) {
-					channelIDs.push(subParsed.items[count].snippet.resourceId.channelId);
-					count = count + 1;
+				// count number of subscriptions
+				var channelCount = subsParsed.pageInfo.totalResults;
+				// store all channel id's
+				for(var count = 0; count < channelCount; count++){
+					channelIDs.push(subsParsed.items[count].snippet.resourceId.channelId);
 				}
 			}
 		}
 	}
 });
 
-function getQuery(){
+function getQuery() {
 	var query = document.getElementById('query-field').value;
-	var channelIDsLength = channelIDs.length;
+	chrome.runtime.sendMessage({fn: "setSearch", lastSearch: query});
 	
 	document.getElementById('display').innerHTML = '';
 	
-	for (var i = 0; i < channelIDsLength; i++) {
+	for (var i = 0; i < channelIDs.length; i++) {
 		var channel = channelIDs[i];
 		searchAllSubs(query, channel);
 	}
 }
 
 function searchAllSubs(query, channel) {
-	var videos = [];
-	var videosInfo;
-	var videosParsed;
-	var videoCount;
-	
+	// send REST request for channel's videos that match query
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET',
-	  'https://www.googleapis.com/youtube/v3/search?q=' + 
-	  query + '&part=id,snippet&maxResults=2&channelId=' + 
-	  channel);
-	xhr.setRequestHeader('Authorization', 'Bearer ' + toke);
+	  'https://www.googleapis.com/youtube/v3/search?q=' + query + 
+	  '&part=id,snippet&maxResults=2&channelId=' + channel);
+	xhr.setRequestHeader('Authorization', 'Bearer ' + globalToken);
 	xhr.send();
 
+	// when response received, parse into JSON and do work
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == XMLHttpRequest.DONE) {
-			videosInfo = xhr.responseText;
-			videosParsed = JSON.parse(videosInfo);
-			videoCount = videosParsed.pageInfo.totalResults;
+			var videosInfo = xhr.responseText;
+			var videosParsed = JSON.parse(videosInfo);
 			
-			//alert(videoCount);
-			var count = 0;
+			// count # of videos, store channel names
+			var videoCount = videosParsed.pageInfo.totalResults;
+			var channelTitle = document.createTextNode(videosParsed.items[0].snippet.channelTitle);
 			
+			// channelContainer contains title and related videos
 			var channelContainer = document.createElement('div');
 			var channelTitlePlace = document.createElement('h2');
-			var channelTitle = document.createTextNode(videosParsed.items[0].snippet.channelTitle);
 			channelTitlePlace.appendChild(channelTitle);
 			channelContainer.appendChild(channelTitlePlace);
 			
-			//document.getElementById('display').innerHTML = document.getElementById('display').innerHTML + 
-			//'<br />===' + videosParsed.items[0].snippet.channelTitle + '===<br />';
-			
-			while (count < videoCount) {
+			for( var count = 0; count < videoCount; count++){
+				// to insert breaks
+				var linebreak = document.createElement("br");
 				var videoContainer = document.createElement('div');
-				var imageContainer = document.createElement('div');
-				var textContainer = document.createElement('div');
+				videoContainer.className = "video";
+				// create video player
+				var videoPlayerIframe = document.createElement('iframe');
 				
-				//create image
-				var thumb = document.createElement('img');
-				thumb.src = videosParsed.items[count].snippet.thumbnails.default.url;
-				thumb.align = 'top';
-				thumb.style.cssFloat = "left";
-				thumb.style.marginBottom = "10px";
-				thumb.style.marginRight = "10px";
-				imageContainer.appendChild(thumb);
+				// create link and add to image and title
+				var videoItem = videosParsed.items[count];
+				// broken undefined link
+				if (!videoItem)
+					continue;
+				var videoId = videoItem.id.videoId;
 				
-				//create title text
-				var infoBox = document.createElement('div');
-				infoBox.style.cssFloat = "left";
-				var videoTitlePlace = document.createElement('a');
-				videoTitlePlace.appendChild(document.createTextNode(videosParsed.items[count].snippet.title));
-				infoBox.appendChild(videoTitlePlace);
-				textContainer.appendChild(infoBox);
+				// double check undefined link
+				if(!videoId)
+					continue;
+				videoPlayerIframe.src = "https://www.youtube.com/embed/" + videoId; 
 				
-				//create link and add to image and title
-				var att = document.createAttribute('href');
-				att.value = "https://youtu.be/" + videosParsed.items[count].id.videoId;
-				videoTitlePlace.setAttributeNode(att);
-				thumb.href = att;
-				
-				videoContainer.appendChild(imageContainer);
-				videoContainer.appendChild(textContainer);
+				videoContainer.appendChild(videoPlayerIframe);
+				videoContainer.appendChild(linebreak);
+				videoContainer.appendChild(calculateLikeRatio(videoId));
+				videoContainer.appendChild(linebreak);
 				channelContainer.appendChild(videoContainer);
+				// breaks up the videos so they don't mesh
+				channelContainer.appendChild(linebreak);
 				document.getElementById('display').appendChild(channelContainer);
 				
-				thumb.style.clear = 'both';
-				infoBox.style.clear = 'both';
-				//document.getElementById('display').appendChild(document.createElement("BR"));
-				
-				//document.getElementById('display').innerHTML = document.getElementById('display').innerHTML +
-				//	'<a href = \"https://youtu.be/' + videosParsed.items[count].id.videoId + 
-				//	'\">  ' + videosParsed.items[count].snippet.title + '</a>';
-					
-				count = count + 1;
 			}
 		}
 	}
 }
 
-function displayResults(shit){
-    document.getElementById('display').innerHTML = shit;
+// returns undefined but has proper values when checked with alert
+function calculateLikeRatio(videoId) {
+	// send REST request for video stats
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET',
+	  'https://www.googleapis.com/youtube/v3/videos?id=' + videoId + '&part=statistics');
+	xhr.setRequestHeader('Authorization', 'Bearer ' + globalToken);
+	xhr.send();
+	
+	// when response received, parse into JSON and do work
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == XMLHttpRequest.DONE) {
+			statsInfo = xhr.responseText;
+			statsParsed = JSON.parse(statsInfo);
+			
+			// basic theoretical physics
+			var likeCount = parseInt(statsParsed.items[0].statistics.likeCount);
+			var dislikeCount = parseInt(statsParsed.items[0].statistics.dislikeCount);
+			var totalCount = likeCount + dislikeCount;
+			var ratio = likeCount / totalCount;
+			//alert(ratio);
+			return ratio;
+		}
+	}
 }
 
-function authDone() {
-    document.getElementById('display').innerHTML = 'done';
-}
-
+// TODO: 6/26/2017 add ability to search by hitting enter button
+// event listener for search button
 document.addEventListener('DOMContentLoaded', function () {
+	var query = document.getElementById('query-field');
+	chrome.runtime.sendMessage({fn: "getSearch"}, function(response){
+		console.log(typeof response);
+		if(response instanceof String || typeof response === "string"){
+			query.value = response;
+		}
+
+	});
     document.getElementById('button').addEventListener('click', getQuery);
 });

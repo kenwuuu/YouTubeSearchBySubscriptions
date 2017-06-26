@@ -10,21 +10,24 @@
 	},
 
 	"oauth2": {
-		"client_id": "REDACTED", //Go to Google API manager. OAUTH ID Name: "Chrome Client 1". Created Apr 5th, 2017. Type: "Chrome App"
+		"client_id": "166276515258-e4t4s5uu21v1qs3p0db2gggmqareih26.apps.googleusercontent.com",
 		"scopes": [
 		  "https://www.googleapis.com/auth/youtube.readonly"
 		]
 	},
-	
-	"background": {
-		"scripts": ["background.js"]
-	},
+
 	
 	"permissions": [
 		"storage", 
 		"tabs", 
 		"identity",
 		"identity.email",
-		"https://www.googleapis.com/*"
-	]
+		"https://www.googleapis.com/*",
+		"activeTab"
+	],
+
+	"background": {
+	   "scripts": ["background.js"]
+	}
+	
 }
